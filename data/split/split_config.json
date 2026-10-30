@@ -1,0 +1,19 @@
+{
+  "train": {
+    "start": "2016-01-03",
+    "end": "2021-06-20",
+    "n_weeks": 286
+  },
+  "val": {
+    "start": "2021-06-27",
+    "end": "2022-06-19",
+    "n_weeks": 52
+  },
+  "test": {
+    "start": "2022-06-26",
+    "end": "2024-05-19",
+    "n_weeks": 100
+  },
+  "total_weeks": 438,
+  "note": "Chia theo thu tu thoi gian, ngay gom ca hai dau. Scaler/STL/PCA chi fit tren Train."
+}

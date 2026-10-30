@@ -1,0 +1,17 @@
+{
+  "date": "date",
+  "Live pig": "live_pig",
+  "White-striped pork": "white_striped_pork",
+  "Beef": "beef",
+  "Dressed chicken": "dressed_chicken",
+  "Large yellow coraker": "large_yellow_croaker",
+  "White radish": "white_radish",
+  "APWP200": "apwp200",
+  "Soybean meal": "soybean_meal",
+  "Corn": "corn",
+  "Import volume": "import_volume",
+  "Export volume": "export_volume",
+  "Import value": "import_value",
+  "Export value": "export_value",
+  "mutton": "mutton"
+}

@@ -1,0 +1,79 @@
+{
+  "input": "data\\raw\\DataSet.xlsx",
+  "rows_raw": 438,
+  "rows_clean": 438,
+  "date_start": "2016-01-03",
+  "date_end": "2024-05-19",
+  "missing_cells": 0,
+  "week_gap_days": "tat ca = 7",
+  "monthly_columns": [
+    "import_volume",
+    "export_volume",
+    "import_value",
+    "export_value"
+  ],
+  "unique_values_per_monthly_col": {
+    "import_volume": 101,
+    "export_volume": 101,
+    "import_value": 101,
+    "export_value": 101
+  },
+  "min_max": {
+    "live_pig": [
+      10.2314285714285,
+      37.8185714285714
+    ],
+    "white_striped_pork": [
+      15.79,
+      52.4671428571428
+    ],
+    "beef": [
+      52.3771428571428,
+      79.2885714285714
+    ],
+    "dressed_chicken": [
+      12.7985714285714,
+      20.9414285714285
+    ],
+    "large_yellow_croaker": [
+      39.7228571428571,
+      48.17
+    ],
+    "white_radish": [
+      1.02142857142857,
+      3.23
+    ],
+    "apwp200": [
+      93.0714285714285,
+      142.235714285714
+    ],
+    "soybean_meal": [
+      2.55307142857142,
+      5.68528571428571
+    ],
+    "corn": [
+      1.58371428571428,
+      2.96385714285714
+    ],
+    "import_volume": [
+      32820.81,
+      143207.6
+    ],
+    "export_volume": [
+      1548.745,
+      10363.69
+    ],
+    "import_value": [
+      5889.01,
+      39460.995
+    ],
+    "export_value": [
+      738.4075,
+      3580.095
+    ],
+    "mutton": [
+      42.6057142857142,
+      77.6885714285714
+    ]
+  }
+}
