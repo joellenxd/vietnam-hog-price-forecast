@@ -1,19 +1,74 @@
 {
   "train": {
-    "start": "2016-01-03",
-    "end": "2021-06-20",
-    "n_weeks": 286
+    "start": "2025-07-02",
+    "end": "2026-03-31",
+    "n_days": 273,
+    "usable_origins_with_label": {
+      "y_h7": {
+        "3_mien": 745,
+        "moi_mien_xap_xi": 248
+      },
+      "y_h14": {
+        "3_mien": 730,
+        "moi_mien_xap_xi": 243
+      },
+      "y_h30": {
+        "3_mien": 682,
+        "moi_mien_xap_xi": 227
+      }
+    }
   },
   "val": {
-    "start": "2021-06-27",
-    "end": "2022-06-19",
-    "n_weeks": 52
+    "start": "2026-04-01",
+    "end": "2026-06-30",
+    "n_days": 91,
+    "usable_origins_with_label": {
+      "y_h7": {
+        "3_mien": 243,
+        "moi_mien_xap_xi": 81
+      },
+      "y_h14": {
+        "3_mien": 222,
+        "moi_mien_xap_xi": 74
+      },
+      "y_h30": {
+        "3_mien": 174,
+        "moi_mien_xap_xi": 58
+      }
+    }
   },
   "test": {
-    "start": "2022-06-26",
-    "end": "2024-05-19",
-    "n_weeks": 100
+    "start": "2026-07-01",
+    "end": "2026-10-30",
+    "n_days": 122,
+    "usable_origins_with_label": {
+      "y_h7": {
+        "3_mien": 342,
+        "moi_mien_xap_xi": 114
+      },
+      "y_h14": {
+        "3_mien": 321,
+        "moi_mien_xap_xi": 107
+      },
+      "y_h30": {
+        "3_mien": 273,
+        "moi_mien_xap_xi": 91
+      }
+    }
   },
-  "total_weeks": 438,
-  "note": "Chia theo thu tu thoi gian, ngay gom ca hai dau. Scaler/STL/PCA chi fit tren Train."
+  "total_days": 486,
+  "horizons_days": [
+    7,
+    14,
+    30
+  ],
+  "retrain_dates_in_test": [
+    "2026-07-01",
+    "2026-08-01",
+    "2026-09-01",
+    "2026-10-01"
+  ],
+  "retrain_rule": "Dau moi thang trong Test, cua so mo rong: huan luyen lai tren moi du lieu da co nhan den thoi diem do",
+  "purge_rule": "Diem goc t chi dung neu t + h <= ngay cuoi cua tap chua t (h = 7, 14, 30)",
+  "note": "Ngay gom ca hai dau. Scaler, STL, PCA chi fit tren Train. Chon tham so tren Val, khong chon tren Test."
 }

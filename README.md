@@ -5,6 +5,7 @@
 - **Dữ liệu:** bộ giá heo hơi Việt Nam theo ngày do nhóm tự thu thập, 34 tỉnh gộp thành 3 miền (Bắc, Trung, Nam), 486 ngày từ 02/07/2025 đến 30/10/2026, kèm lịch âm và Tết, thời tiết, tỷ giá, giá thức ăn, nhập khẩu, dịch tả lợn châu Phi. Mô tả đầy đủ: `data/raw/README.md`, `data_dictionary.md`, `quality_report.md`.
 - **Bài tham chiếu phương pháp:** Liu et al., 2025, PLOS ONE, DOI 10.1371/journal.pone.0324646. Nhóm tự viết code mới, chỉ áp dụng mô hình và thuật toán của bài.
 - **Mô hình:** Naive, ARIMA/SARIMAX, XGBoost, LSTM, BiLSTM, STL-PCA-BiLSTM. **Horizon:** 7, 14, 30 ngày (dự báo trực tiếp, mỗi horizon một mô hình).
+- Kế hoạch, phân công: drive dự án của nhóm https://drive.google.com/drive/folders/1T0f25lQLUYlO4BnWc8AyF4MyUeaFOt0F.
 
 ## 1. Cài đặt và chạy
 

@@ -1,5 +1,9 @@
-# """split.py - Chia clean.csv theo thoi gian thanh Train / Val / Test.
-# Luu y ve ro ri du lieu: khi tao bien tre (lag), tinh tren TOAN BO chuoi theo thu tu thoi gian roi moi gan nhan split.
+# """split.py - Chia du lieu gia heo hoi Viet Nam (theo ngay) thanh Train / Val / Test.
+# Chia theo THU TU THOI GIAN (khong xao tron). Moc ngay co dinh, gom ca hai dau.
+# Nhan y_h{h} cua diem goc t la gia tai t + h ngay, nen moi tap chi dung diem goc t thoa t + h <= ngay cuoi cua tap do (loai cac diem goc sat cuoi tap, tranh ro ri nhan sang tap sau).
+# Ket qua: data/split/split_config.json
+# Cach chay (tu thu muc goc cua repo):
+#     python src/split.py
 # """
 import argparse
 import json
@@ -8,13 +12,17 @@ from pathlib import Path
 
 import pandas as pd
 
-# (ten tap, ngay dau, ngay cuoi, so tuan) - ngay la Chu nhat dai dien tuan, gom ca hai dau
+# (ten tap, ngay dau, ngay cuoi, so ngay)
 SPLITS = [
-    ("train", "2016-01-03", "2021-06-20", 286),
-    ("val", "2021-06-27", "2022-06-19", 52),
-    ("test", "2022-06-26", "2024-05-19", 100),
+    ("train", "2025-07-02", "2026-03-31", 273),
+    ("val", "2026-04-01", "2026-06-30", 91),
+    ("test", "2026-07-01", "2026-10-30", 122),
 ]
-TOTAL_WEEKS = sum(s[3] for s in SPLITS)  # 438
+TOTAL_DAYS = sum(s[3] for s in SPLITS)  # 486
+HORIZONS = [7, 14, 30]                  # ngay
+RETRAIN_DATES = ["2026-07-01", "2026-08-01", "2026-09-01", "2026-10-01"]  # dau moi thang trong Test
+REGIONS = ["Bac", "Trung", "Nam"]
+DEFAULT_INPUT = "data/raw/parquet/supervised_region_daily.parquet"
 
 
 def assign_split(dates):
@@ -27,62 +35,77 @@ def assign_split(dates):
     return out
 
 
+def is_valid_origin(dates, horizon):
+    """True neu diem goc t co t + horizon <= ngay cuoi cua tap chua t."""
+    dates = pd.to_datetime(pd.Series(dates))
+    ends = {name: pd.Timestamp(end) for name, _, end, _ in SPLITS}
+    split_end = assign_split(dates).map(ends)
+    return (dates + pd.Timedelta(days=horizon)) <= split_end
+
+
 def main():
     ap = argparse.ArgumentParser(description="Chia Train/Val/Test theo thoi gian")
-    ap.add_argument("--input", default="data/clean/clean.csv")
+    ap.add_argument("--input", default=DEFAULT_INPUT)
     ap.add_argument("--outdir", default="data/split")
-    ap.add_argument("--save", action="store_true", help="ghi them train.csv, val.csv, test.csv")
     args = ap.parse_args()
 
     src = Path(args.input)
     if not src.exists():
-        sys.exit(f"Khong thay file: {src}. Chay clean.py truoc.")
+        sys.exit(f"Khong thay file: {src}. Dat bo du lieu vao data/raw/ (xem README).")
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    df = pd.read_csv(src, parse_dates=["date"])
+    df = pd.read_parquet(src)
+    df["date"] = pd.to_datetime(df["date"])
+    for c in ["date", "region", "price", "y_h7", "y_h14", "y_h30"]:
+        assert c in df.columns, f"Thieu cot {c}"
 
     # --- Kiem tra dau vao ---
-    assert df["date"].is_monotonic_increasing and df["date"].is_unique, "Ngay phai tang dan, khong trung"
-    assert (df["date"].diff().dropna().dt.days == 7).all(), "Cac tuan phai cach deu 7 ngay"
-    assert len(df) == TOTAL_WEEKS, f"So dong {len(df)} != {TOTAL_WEEKS}"
+    assert not df.duplicated(["date", "region"]).any(), "Trung khoa (date, region)"
+    assert set(df["region"]) == set(REGIONS), f"Mien khong dung: {set(df['region'])}"
+    all_days = pd.date_range(SPLITS[0][1], SPLITS[-1][2], freq="D")
+    assert len(all_days) == TOTAL_DAYS, "Tong so ngay cac tap khac khoang ngay"
+    for r, g in df.groupby("region"):
+        assert len(g) == TOTAL_DAYS and set(g["date"]) == set(all_days), f"Mien {r}: luoi ngay khong day du {TOTAL_DAYS} ngay"
 
     df["split"] = assign_split(df["date"])
-    parts = {name: df[df["split"] == name] for name, *_ in SPLITS}
 
     # --- Kiem tra ket qua ---
+    cfg = {}
+    prev_end = None
     for name, start, end, n in SPLITS:
-        p = parts[name]
-        assert len(p) == n, f"{name}: {len(p)} tuan, can {n}"
-        assert p["date"].iloc[0] == pd.Timestamp(start), f"{name}: ngay dau {p['date'].iloc[0].date()} != {start}"
-        assert p["date"].iloc[-1] == pd.Timestamp(end), f"{name}: ngay cuoi {p['date'].iloc[-1].date()} != {end}"
-    assert sum(len(p) for p in parts.values()) == len(df), "Tong ba tap khac tong so dong"
-    assert parts["train"]["date"].max() < parts["val"]["date"].min(), "Train chong len Val"
-    assert parts["val"]["date"].max() < parts["test"]["date"].min(), "Val chong len Test"
-    assert not set(parts["train"]["date"]) & set(parts["val"]["date"]) \
-        and not set(parts["val"]["date"]) & set(parts["test"]["date"]) \
-        and not set(parts["train"]["date"]) & set(parts["test"]["date"]), "Ba tap co ngay trung nhau"
-    # ba tap lien tiep, khong ho gap ngay nao: tuan cuoi tap truoc + 7 ngay = tuan dau tap sau
-    assert parts["train"]["date"].iloc[-1] + pd.Timedelta(days=7) == parts["val"]["date"].iloc[0], "Ho giua Train va Val"
-    assert parts["val"]["date"].iloc[-1] + pd.Timedelta(days=7) == parts["test"]["date"].iloc[0], "Ho giua Val va Test"
+        p = df[(df["split"] == name) & (df["region"] == REGIONS[0])]
+        assert len(p) == n, f"{name}: {len(p)} ngay, can {n}"
+        assert p["date"].min() == pd.Timestamp(start) and p["date"].max() == pd.Timestamp(end), f"{name}: sai ngay dau/cuoi"
+        if prev_end is not None:
+            assert pd.Timestamp(start) == prev_end + pd.Timedelta(days=1), f"Ho/chong giua cac tap truoc {name}"
+        prev_end = pd.Timestamp(end)
+        m = df[df["split"] == name]
+        usable = {}
+        for h in HORIZONS:
+            ok = is_valid_origin(m["date"], h) & m[f"y_h{h}"].notna()
+            usable[f"y_h{h}"] = {"3_mien": int(ok.sum()), "moi_mien_xap_xi": int(round(ok.sum() / len(REGIONS)))}
+        cfg[name] = {"start": start, "end": end, "n_days": n, "usable_origins_with_label": usable}
+    assert sum(c["n_days"] for c in cfg.values()) == TOTAL_DAYS, "Tong ngay ba tap sai"
+    assert not (df["date"] > pd.Timestamp(SPLITS[-1][2])).any(), "Co ngay sau ngay cuoi Test"
 
-    # --- Ghi file cau hinh ---
     config = {
-        name: {"start": start, "end": end, "n_weeks": n} for name, start, end, n in SPLITS
+        **cfg,
+        "total_days": TOTAL_DAYS,
+        "horizons_days": HORIZONS,
+        "retrain_dates_in_test": RETRAIN_DATES,
+        "retrain_rule": "Dau moi thang trong Test, cua so mo rong: huan luyen lai tren moi du lieu da co nhan den thoi diem do",
+        "purge_rule": "Diem goc t chi dung neu t + h <= ngay cuoi cua tap chua t (h = 7, 14, 30)",
+        "note": "Ngay gom ca hai dau. Scaler, STL, PCA chi fit tren Train. Chon tham so tren Val, khong chon tren Test.",
     }
-    config["total_weeks"] = TOTAL_WEEKS
-    config["note"] = "Chia theo thu tu thoi gian, ngay gom ca hai dau. Scaler/STL/PCA chi fit tren Train."
     with open(outdir / "split_config.json", "w", encoding="utf-8") as f:
         json.dump(config, f, ensure_ascii=False, indent=2)
 
-    if args.save:
-        for name, p in parts.items():
-            p.drop(columns="split").to_csv(outdir / f"{name}.csv", index=False, date_format="%Y-%m-%d")
-
-    print(f"OK: {TOTAL_WEEKS} tuan = " + " + ".join(f"{n} {name}" for name, _, _, n in SPLITS))
+    print(f"OK: {TOTAL_DAYS} ngay = " + " + ".join(f"{n} {name}" for name, _, _, n in SPLITS))
     for name, start, end, n in SPLITS:
-        print(f"    {name:5s} {start} -> {end}  ({n} tuan)")
-    print(f"    Da ghi: {outdir / 'split_config.json'}" + (" + train/val/test.csv" if args.save else ""))
+        print(f"    {name:5s} {start} -> {end}  ({n} ngay)  diem goc co nhan: " +
+              ", ".join(f"{k}={v['moi_mien_xap_xi']}/mien" for k, v in cfg[name]['usable_origins_with_label'].items()))
+    print(f"    Da ghi: {outdir / 'split_config.json'}")
 
 
 if __name__ == "__main__":
