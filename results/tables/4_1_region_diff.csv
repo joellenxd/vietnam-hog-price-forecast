@@ -1,0 +1,4 @@
+﻿Cặp miền,Số ngày,Chênh lệch TB (đ/kg),Độ lệch chuẩn,Lớn nhất (đ/kg),Nhỏ nhất (đ/kg),Tương quan mức giá,Tương quan thay đổi hằng ngày
+Bắc − Trung,402,1235,1255,4733,-2533,0.984,0.759
+Bắc − Nam,402,404,2928,8358,-5783,0.911,0.546
+Trung − Nam,402,-832,2103,4443,-6045,0.955,0.699

@@ -1,0 +1,13 @@
+﻿Miền,Mẫu,Chuỗi,n,Số độ trễ,Thống kê ADF,p-value,Giá trị tới hạn 5%,Kết luận (mức 5%)
+Bắc,Toàn bộ,Gốc,477,5,-1.24,0.656,-2.868,Không dừng
+Bắc,Toàn bộ,Sai phân bậc 1,477,4,-6.165,0.0,-2.868,Dừng
+Trung,Toàn bộ,Gốc,475,7,-1.566,0.5009,-2.868,Không dừng
+Trung,Toàn bộ,Sai phân bậc 1,470,11,-3.931,0.0018,-2.868,Dừng
+Nam,Toàn bộ,Gốc,475,7,-1.047,0.7356,-2.868,Không dừng
+Nam,Toàn bộ,Sai phân bậc 1,475,6,-4.5,0.0002,-2.868,Dừng
+Bắc,Train,Gốc,264,5,-1.678,0.4425,-2.873,Không dừng
+Bắc,Train,Sai phân bậc 1,264,4,-4.529,0.0002,-2.873,Dừng
+Trung,Train,Gốc,262,7,-1.846,0.358,-2.873,Không dừng
+Trung,Train,Sai phân bậc 1,261,7,-3.309,0.0145,-2.873,Dừng
+Nam,Train,Gốc,263,6,-1.696,0.4334,-2.873,Không dừng
+Nam,Train,Sai phân bậc 1,263,5,-3.597,0.0058,-2.873,Dừng

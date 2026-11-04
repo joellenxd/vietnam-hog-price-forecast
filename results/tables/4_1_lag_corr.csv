@@ -1,0 +1,49 @@
+﻿Miền,Thức ăn,Độ trễ (ngày),Tương quan,n
+Bắc,Ngô (World Bank),0,-0.044,375
+Bắc,Ngô (World Bank),30,0.196,375
+Bắc,Ngô (World Bank),60,0.233,375
+Bắc,Ngô (World Bank),90,0.02,375
+Bắc,Khô đậu (World Bank),0,0.284,375
+Bắc,Khô đậu (World Bank),30,0.419,375
+Bắc,Khô đậu (World Bank),60,0.167,375
+Bắc,Khô đậu (World Bank),90,-0.046,375
+Bắc,Giá NK ngô,0,-0.027,375
+Bắc,Giá NK ngô,30,-0.33,375
+Bắc,Giá NK ngô,60,-0.64,375
+Bắc,Giá NK ngô,90,-0.744,375
+Bắc,Giá NK đậu tương,0,-0.434,375
+Bắc,Giá NK đậu tương,30,-0.064,375
+Bắc,Giá NK đậu tương,60,-0.015,375
+Bắc,Giá NK đậu tương,90,0.111,375
+Trung,Ngô (World Bank),0,-0.016,375
+Trung,Ngô (World Bank),30,0.211,375
+Trung,Ngô (World Bank),60,0.253,375
+Trung,Ngô (World Bank),90,0.023,375
+Trung,Khô đậu (World Bank),0,0.288,375
+Trung,Khô đậu (World Bank),30,0.414,375
+Trung,Khô đậu (World Bank),60,0.209,375
+Trung,Khô đậu (World Bank),90,0.004,375
+Trung,Giá NK ngô,0,-0.025,375
+Trung,Giá NK ngô,30,-0.349,375
+Trung,Giá NK ngô,60,-0.677,375
+Trung,Giá NK ngô,90,-0.788,375
+Trung,Giá NK đậu tương,0,-0.41,375
+Trung,Giá NK đậu tương,30,-0.061,375
+Trung,Giá NK đậu tương,60,-0.036,375
+Trung,Giá NK đậu tương,90,0.138,375
+Nam,Ngô (World Bank),0,-0.069,374
+Nam,Ngô (World Bank),30,0.173,374
+Nam,Ngô (World Bank),60,0.242,374
+Nam,Ngô (World Bank),90,0.104,374
+Nam,Khô đậu (World Bank),0,0.148,374
+Nam,Khô đậu (World Bank),30,0.313,374
+Nam,Khô đậu (World Bank),60,0.171,374
+Nam,Khô đậu (World Bank),90,0.027,374
+Nam,Giá NK ngô,0,0.021,374
+Nam,Giá NK ngô,30,-0.322,374
+Nam,Giá NK ngô,60,-0.618,374
+Nam,Giá NK ngô,90,-0.78,374
+Nam,Giá NK đậu tương,0,-0.448,374
+Nam,Giá NK đậu tương,30,-0.171,374
+Nam,Giá NK đậu tương,60,-0.076,374
+Nam,Giá NK đậu tương,90,0.062,374
