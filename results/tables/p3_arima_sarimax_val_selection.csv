@@ -1,0 +1,13 @@
+region,model,order,val_mae,val_n,selected
+Bac,arima,"(0, 1, 0)",1136.956522,184,True
+Bac,arima,"(1, 1, 0)",1137.508662,184,False
+Bac,sarimax,"(0, 1, 0)",1136.315712,184,False
+Bac,sarimax,"(1, 1, 0)",1135.076858,184,True
+Trung,arima,"(0, 1, 0)",1446.146245,184,False
+Trung,arima,"(1, 1, 0)",1420.225726,184,True
+Trung,sarimax,"(0, 1, 0)",1445.815388,184,False
+Trung,sarimax,"(1, 1, 0)",1417.960234,184,True
+Nam,arima,"(0, 1, 0)",1705.163043,184,False
+Nam,arima,"(1, 1, 0)",1647.734810,184,True
+Nam,sarimax,"(0, 1, 0)",1704.886126,184,False
+Nam,sarimax,"(1, 1, 0)",1648.066007,184,True
