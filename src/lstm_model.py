@@ -12,10 +12,14 @@
 #   3) Chống rò rỉ nhãn: tại mốc R chỉ dùng origin t có t + h <= R - 1. Bộ chuẩn hóa chỉ khớp trên các ngày <= R - 1 (cột nhãn Delta cũng vậy).
 #   4) Origin Chủ nhật chép lại (is_sunday_copy = 1) bị loại; ngày mục tiêu Chủ nhật vẫn giữ.
 #   5) Origin hợp lệ ở Test: split = test, valid_h = 1, có nhãn y_h (đúng bộ 99/93/79 mỗi miền).
-# Hướng dẫn chạy (từ thư mục gốc repo):
+# Chạy (từ thư mục gốc repo):
 #     python src/lstm_model.py                 # LSTM + BiLSTM, 3 horizon, c6
-#     python src/lstm_model.py --smoke         # chạy thử, nhanh (3 epoch, 1 seed)
 #     python src/lstm_model.py --models lstm --horizons 7 --seeds 1
+#     python src/lstm_model.py --models lstm --search 20 --seeds 5   # random search <=20 cấu hình trên Val, rồi 5 seed
+#                                                      # (kết quả có hậu tố _tuned; bản mặc định không bị ghi đè)
+#     python src/lstm_model.py --models bilstm --config c1 --seeds 5 \\
+#         --params-from results/tables/<file val_selection đã tune>.csv   # ablation: giữ nguyên tham số đã tune
+#                                                      # (hậu tố _abl; chọn lại số epoch trên Val cho mỗi cấu hình biến)
 # Kết quả:
 #     predictions/lstm_c6.csv, predictions/bilstm_c6.csv   (8 cột chuẩn chung)
 #     results/tables/lstm_bilstm_c6_metrics.csv            (MAE, RMSE, MAPE theo miền x horizon)
@@ -231,6 +235,36 @@ def select_epochs(P, kind, h, cfg, log):
     return epochs, row
 
 
+# ----------------------------- random search trên Val -----------------------------
+SEARCH_SPACE = dict(units=[16, 32, 64], layers=[1, 2], dropout=[0.0, 0.1, 0.2, 0.3],
+                    lr=[3e-4, 1e-3, 3e-3], batch=[16, 32, 64], window=[7, 14, 21])
+
+
+def random_search(P, kind, h, cfg, n_trials, search_seeds, log, rng_seed=42):
+    """<= n_trials cấu hình (trial 0 = tham số mặc định), chọn theo MAE Val thấp nhất. Không dùng Test."""
+    rng = np.random.default_rng(rng_seed + h)
+    seen, trials = set(), []
+    base = {k: cfg[k] for k in SEARCH_SPACE}
+    trials.append(base)
+    seen.add(tuple(base.values()))
+    while len(trials) < n_trials:
+        t = {k: v[int(rng.integers(len(v)))] for k, v in SEARCH_SPACE.items()}
+        if tuple(t.values()) not in seen:
+            seen.add(tuple(t.values()))
+            trials.append(t)
+    rows, best = [], None
+    quiet = lambda s: None
+    for i, t in enumerate(trials):
+        c = dict(cfg, **t, seeds=search_seeds)
+        ep, row = select_epochs(P, kind, h, c, quiet)
+        rows.append(dict(model=kind, horizon=h, trial=i, **t, epochs_chosen=ep, val_mae=row["val_mae"],
+                         val_mae_delta0=row["val_mae_delta0"]))
+        if best is None or row["val_mae"] < best[0]:
+            best = (row["val_mae"], i, t)
+        log(f"  [Search] {kind:6s} h={h:2d} trial {i:2d}: {t} -> MAE Val {row['val_mae']:.0f} (tốt nhất {best[0]:.0f}, #{best[1]})")
+    return dict(cfg, **best[2]), rows, best[1]
+
+
 # ----------------------------- bước 2: walk-forward trên Test -----------------------------
 def walk_forward(P, kind, h, epochs, cfg, log):
     W = cfg["window"]
@@ -253,13 +287,14 @@ def walk_forward(P, kind, h, epochs, cfg, log):
             m, _ = train_model(kind, Xtr, ytr, cfg, seed=s, epochs=epochs)
             preds.append(m(Xte, training=False).numpy().ravel() * ds + dm)
         dhat = np.mean(preds, axis=0)
-        for (r, i), dh in zip(info, dhat):
+        for j, ((r, i), dh) in enumerate(zip(info, dhat)):
             R = P["r"][r]
             recs.append(dict(
                 model=kind, config=cfg["config"], region=r, horizon=h,
                 origin_date=pd.Timestamp(R["dates"][i]).date().isoformat(),
                 target_date=(pd.Timestamp(R["dates"][i]) + pd.Timedelta(days=h)).date().isoformat(),
-                y_true=R["y"][h][i], y_pred=R["price_t"][i] + dh))
+                y_true=R["y"][h][i], y_pred=R["price_t"][i] + dh,
+                _sp=[R["price_t"][i] + p_[j] for p_ in preds]))
         log(f"  [Test] {kind:6s} h={h:2d} mốc {R0.date()}: train n={len(dtr)}, dự báo {len(info)} origin")
     return recs
 
@@ -305,6 +340,11 @@ def main():
     ap.add_argument("--seeds", type=int, default=DEFAULTS["seeds"])
     ap.add_argument("--window", type=int, default=DEFAULTS["window"])
     ap.add_argument("--max-epochs", type=int, default=DEFAULTS["max_epochs"])
+    ap.add_argument("--search", type=int, default=0, help="số cấu hình random search trên Val (<=20; 0 = tắt, dùng tham số mặc định)")
+    ap.add_argument("--search-seeds", type=int, default=1, help="số seed cho mỗi cấu hình khi random search (mặc định 1)")
+    ap.add_argument("--params-from", default=None,
+                    help="file *_val_selection.csv của lần random search: dùng lại tham số đã chọn cho từng (mô hình, horizon), "
+                         "không tìm kiếm lại (dùng cho ablation c1/c3/c6)")
     ap.add_argument("--smoke", action="store_true", help="chạy thử nhanh: 1 seed, 3 epoch")
     ap.add_argument("--out-dir", default=None, help="thư mục gốc để ghi predictions/ và results/ (mặc định = thư mục gốc repo)")
     a = ap.parse_args()
@@ -323,22 +363,71 @@ def main():
     log(f"Dữ liệu: {data_path} | cấu hình {a.config}: {len(P['feats'])} biến"
         f"{' + one-hot miền' if P['use_region'] else ''} | cửa sổ {cfg['window']} ngày | seeds {cfg['seeds']}")
 
-    all_preds, sel_rows = [], []
+    if a.search and a.params_from:
+        sys.exit("Chỉ dùng một trong hai: --search (tìm tham số) hoặc --params-from (dùng lại tham số đã tune).")
+    tag = "_tuned" if a.search else ("_abl" if a.params_from else "")
+    stem = "_".join(a.models)          # lstm | bilstm | lstm_bilstm (để chạy riêng từng mô hình không ghi đè nhau)
+    ptab = None
+    if a.params_from:
+        ptab = pd.read_csv(a.params_from)
+        need = set(SEARCH_SPACE) | {"model", "horizon"}
+        if not need <= set(ptab.columns):
+            sys.exit(f"{a.params_from} thiếu cột {sorted(need - set(ptab.columns))}; hãy dùng file *_val_selection.csv của lần --search.")
+    all_preds, sel_rows, search_rows, time_rows = [], [], [], []
     for kind in a.models:
         for h in a.horizons:
-            epochs, row = select_epochs(P, kind, h, cfg, log)
+            c = cfg
+            ts = time.time()
+            if ptab is not None:
+                q = ptab[(ptab.model == kind) & (ptab.horizon == h)]
+                if len(q) != 1:
+                    sys.exit(f"{a.params_from}: cần đúng 1 dòng cho {kind} h={h}, thấy {len(q)}.")
+                q = q.iloc[0]
+                c = dict(cfg, units=int(q.units), layers=int(q.layers), dropout=float(q.dropout),
+                         lr=float(q.lr), batch=int(q.batch), window=int(q.window))
+                log(f"  Dùng tham số đã tune {kind} h={h}: " + str({k: c[k] for k in SEARCH_SPACE}))
+            if a.search:
+                c, rows, bi = random_search(P, kind, h, cfg, min(a.search, 20), a.search_seeds, log)
+                search_rows += rows
+                log(f"  => {kind} h={h}: chọn trial {bi}: " + str({k: c[k] for k in SEARCH_SPACE}))
+            t_search = time.time() - ts
+            epochs, row = select_epochs(P, kind, h, c, log)
+            row.update({k: c[k] for k in SEARCH_SPACE})
             sel_rows.append(row)
-            all_preds += walk_forward(P, kind, h, epochs, cfg, log)
+            t1 = time.time()
+            all_preds += walk_forward(P, kind, h, epochs, c, log)
+            t_end = time.time()
+            time_rows.append(dict(model=kind, config=a.config, horizon=h, seeds=c["seeds"],
+                                  search_s=round(t_search, 1), val_epochs_s=round(t1 - ts - t_search, 1),
+                                  walk_forward_s=round(t_end - t1, 1), total_s=round(t_end - ts, 1)))
 
+    seed_pred = np.array([r.pop("_sp") for r in all_preds])      # (n_dòng, n_seed)
     pred = pd.DataFrame(all_preds)
-    pred = pred.sort_values(["model", "region", "horizon", "origin_date"]).reset_index(drop=True)
+    order = pred.sort_values(["model", "region", "horizon", "origin_date"]).index.values
+    pred = pred.loc[order].reset_index(drop=True)
+    seed_pred = seed_pred[order]
     (out_root / "predictions").mkdir(parents=True, exist_ok=True)
     (out_root / "results" / "tables").mkdir(parents=True, exist_ok=True)
     for kind, g in pred.groupby("model"):
-        g.to_csv(out_root / "predictions" / f"{kind}_{a.config}.csv", index=False, float_format="%.6f")
+        g.to_csv(out_root / "predictions" / f"{kind}_{a.config}{tag}.csv", index=False, float_format="%.6f")
+    tb = out_root / "results" / "tables"
     met = metrics(pred)
-    met.to_csv(out_root / "results" / "tables" / f"lstm_bilstm_{a.config}_metrics.csv", index=False, float_format="%.6f")
-    pd.DataFrame(sel_rows).to_csv(out_root / "results" / "tables" / f"lstm_bilstm_{a.config}_val_selection.csv", index=False)
+    met.to_csv(tb / f"{stem}_{a.config}{tag}_metrics.csv", index=False, float_format="%.6f")
+    pd.DataFrame(sel_rows).to_csv(tb / f"{stem}_{a.config}{tag}_val_selection.csv", index=False)
+    if search_rows:
+        pd.DataFrame(search_rows).to_csv(tb / f"{stem}_{a.config}_random_search.csv", index=False)
+    # MAE trung bình ± độ lệch chuẩn qua các seed (mỗi seed là một mô hình riêng, MAE tính trên 3 miền gộp)
+    ss = []
+    for (m, h), g in pred.groupby(["model", "horizon"]):
+        ix = g.index.values
+        maes = [float(np.mean(np.abs(seed_pred[ix, j] - g["y_true"].values))) for j in range(seed_pred.shape[1])]
+        ss.append(dict(model=m, config=a.config, horizon=h, n_seeds=len(maes), mae_mean=np.mean(maes),
+                       mae_std=np.std(maes, ddof=1) if len(maes) > 1 else float("nan"),
+                       mae_ensemble=float(np.mean(np.abs(g["y_pred"] - g["y_true"]))),
+                       mae_per_seed=str([round(x) for x in maes])))
+    pd.DataFrame(ss).to_csv(tb / f"{stem}_{a.config}{tag}_seed_mae.csv", index=False, float_format="%.4f")
+    pd.DataFrame(time_rows).to_csv(tb / f"{stem}_{a.config}{tag}_runtime.csv", index=False)
+    log(f"Tổng thời gian chạy: {time.time() - t0:.0f}s (chi tiết: {stem}_{a.config}{tag}_runtime.csv)")
     log(f"Đã ghi {len(pred)} dòng dự báo, {len(met)} nhóm chỉ số vào {out_root}")
     compare_with_naive(pred, log)
 

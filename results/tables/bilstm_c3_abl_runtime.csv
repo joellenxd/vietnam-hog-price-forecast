@@ -1,0 +1,4 @@
+model,config,horizon,seeds,search_s,val_epochs_s,walk_forward_s,total_s
+bilstm,c3,7,5,0.0,99.7,166.4,266.1
+bilstm,c3,14,5,0.0,47.5,154.8,202.3
+bilstm,c3,30,5,0.0,54.1,98.7,152.8

@@ -1,0 +1,4 @@
+model,config,horizon,seeds,search_s,val_epochs_s,walk_forward_s,total_s
+lstm,c6,7,5,221.5,47.5,104.2,373.2
+lstm,c6,14,5,162.1,45.8,116.1,324.0
+lstm,c6,30,5,190.3,52.9,81.3,324.5
