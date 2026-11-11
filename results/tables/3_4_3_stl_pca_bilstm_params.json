@@ -1,0 +1,26 @@
+{
+  "7": {
+    "window": 14,
+    "hidden": 64,
+    "dropout": 0.1,
+    "lr": 0.001,
+    "pca_var": 0.9,
+    "epochs": 1
+  },
+  "14": {
+    "window": 14,
+    "hidden": 64,
+    "dropout": 0.3,
+    "lr": 0.001,
+    "pca_var": 0.95,
+    "epochs": 1
+  },
+  "30": {
+    "window": 28,
+    "hidden": 64,
+    "dropout": 0.3,
+    "lr": 0.001,
+    "pca_var": 0.95,
+    "epochs": 1
+  }
+}
