@@ -1,0 +1,4 @@
+model,horizon,trial,n,mae,rmse,mape,params
+xgboost,7,tune_03,210,1113.3792726790925,1470.4553490090466,1.6894673309447827,"{""n_estimators"": 200, ""max_depth"": 5, ""learning_rate"": 0.03, ""subsample"": 0.8, ""colsample_bytree"": 0.8}"
+xgboost,14,baseline_default,192,2072.438117143482,2544.084165428253,3.1294688499388443,"{""n_estimators"": 100, ""max_depth"": 6, ""learning_rate"": 0.3, ""subsample"": 1.0, ""colsample_bytree"": 1.0}"
+xgboost,30,baseline_default,150,3566.4673815794663,3994.54588364295,5.351437142391722,"{""n_estimators"": 100, ""max_depth"": 6, ""learning_rate"": 0.3, ""subsample"": 1.0, ""colsample_bytree"": 1.0}"

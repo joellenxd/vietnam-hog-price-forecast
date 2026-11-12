@@ -111,3 +111,51 @@ Mỗi file là CSV có đúng các cột (P3 chốt trong `evaluate.py`, nếu �
 - Cần đổi file của người khác: nhắn cho người đó, không tự sửa.
 - Mọi kết quả đưa vào báo cáo phải có code chạy lại được từ repo.
 - Bộ dữ liệu crawl có nguồn từ VietnamBiz: kiểm tra điều khoản sử dụng trước khi công bố repo hoặc dữ liệu ra ngoài lớp.
+
+
+
+
+## 9. Hướng dẫn chạy mô hình XGBoost (P4)
+Các thí nghiệm XGBoost được thực hiện từ thư mục gốc của repo, sử dụng dữ liệu đặc trưng và cấu hình chia tập đã được chuẩn bị ở các giai đoạn trước.
+
+### 9.1. Các script thực hiện
+| Script | Chức năng |
+|---|---|
+| `src/xgb_model.py` | Huấn luyện và đánh giá XGBoost Baseline C6 trên H=7, 14, 30 |
+| `src/xgb_ablation.py` | Thực hiện Ablation Study với 6 cấu hình C1–C6 |
+| `src/xgb_feed_lag.py` | So sánh ảnh hưởng của việc bổ sung giá thức ăn trễ 30, 60, 90 ngày |
+| `src/xgb_tuning.py` | Thử nghiệm và lựa chọn siêu tham số trên Validation |
+| `src/xgb_tuned_test.py` | Đánh giá cấu hình siêu tham số đã chọn trên Test |
+| `src/xgb_shap.py` | Phân tích mức độ đóng góp của đặc trưng bằng SHAP tại H=7 và H=30 |
+
+### 9.2. Thứ tự chạy
+Kích hoạt môi trường ảo và cài đặt thư viện theo mục 1, sau đó chạy lần lượt:
+
+```bash
+# 1. XGBoost Baseline C6
+python src/xgb_model.py
+
+# 2. Ablation Study C1-C6
+python src/xgb_ablation.py
+
+# 3. Thí nghiệm độ trễ giá thức ăn
+python src/xgb_feed_lag.py
+
+# 4. Tuning siêu tham số trên Validation
+python src/xgb_tuning.py
+
+# 5. Đánh giá cấu hình đã chọn trên Test
+python src/xgb_tuned_test.py
+
+# 6. Phân tích SHAP
+python src/xgb_shap.py
+```
+
+Các script sử dụng chung dữ liệu, cấu hình chia tập và quy trình walk-forward đã được thống nhất trong dự án. Cần chạy bước Tuning trước bước Tuned Test và SHAP.
+
+### 9.3. Kết quả đầu ra
+- `predictions/`: các file dự báo CSV của Baseline, Ablation, Feed Lag và Tuned Test.
+- `results/tables/`: các bảng MAE, RMSE, MAPE, kết quả Ablation, Feed Lag và Tuning.
+- `results/figures/`: biểu đồ SHAP Summary, SHAP Feature Importance và các file CSV mức độ quan trọng của đặc trưng.
+
+Các kết quả được sử dụng trong báo cáo cần được lưu cùng mã nguồn tương ứng để có thể kiểm tra và chạy lại.
